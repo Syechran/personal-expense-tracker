@@ -1,0 +1,377 @@
+import { useState, useEffect } from "react";
+import { Banknote, Ticket, ChevronDown, Utensils, Car, ShoppingBag, Zap, Tv } from "lucide-react";
+
+export default function Overview() {
+  const [overviewTab, setOverviewTab] = useState("statistics");
+  const [statFilter, setStatFilter] = useState("income");
+  const [selectedBalance, setSelectedBalance] = useState("Total Balance");
+  const [isBalanceOpen, setIsBalanceOpen] = useState(false);
+
+  // --- 1. STATE UNTUK DATA ASLI DARI DATABASE ---
+  const [transactions, setTransactions] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(3); // Default tanggal kalender yang diklik
+  const [currentMonthView, setCurrentMonthView] = useState(new Date());
+  
+  // Mengambil kategori dinamis secara otomatis seperti AddTransaction & Home
+// Mengambil kategori dinamis secara otomatis seperti AddTransaction & Home
+  const [balanceCategories, setBalanceCategories] = useState(["Total Balance", "Bank", "Cash", "E-Wallet"]);
+
+// Ambil Kategori dari LocalStorage
+  useEffect(() => {
+    try {
+      const defaultCategories = ["Bank", "Cash", "E-Wallet"];
+      const saved = localStorage.getItem("balanceCategories");
+      let parsedData = saved ? JSON.parse(saved) : [];
+
+      // Gabungkan default dengan yang ada di storage (kalau-kalau storage kosong/korup)
+      const merged = [...new Set([...defaultCategories, ...parsedData])];
+      
+      // Pastikan "Total Balance" tidak ada di tengah-tengah, kita saring dulu
+      const cleanCategories = merged.filter(item => item !== "Total Balance");
+      
+      // Pasang ke state dengan Total Balance di urutan paling atas
+      setBalanceCategories(["Total Balance", ...cleanCategories]);
+      
+    } catch (error) {
+      console.error("Gagal membaca LocalStorage:", error);
+      setBalanceCategories(["Total Balance", "Bank", "Cash", "E-Wallet"]);
+    }
+  }, []);
+
+  // --- 2. FETCH DATA DARI BACKEND ---
+  useEffect(() => {
+    fetch("/api/transactions")
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.status === "Success") {
+          // EXTREME SAFEGUARD: Pastikan data adalah Array
+          const fetchedData = Array.isArray(result.data) ? result.data : [];
+          setTransactions(fetchedData);
+        }
+      })
+      .catch((err) => console.error("Gagal ambil data:", err));
+  }, []);
+
+  // --- 3. LOGIKA PEMROSESAN DATA ---
+  try {
+  
+  // A. Filter berdasarkan Dropdown "Balance Category" (Kanan atas)
+  const transactionsByBalance = transactions.filter(trx => 
+    selectedBalance === "Total Balance" ? true : trx.balance === selectedBalance
+  );
+
+  // B. Hitung Total untuk Summary Cards (Kotak Hitam di Atas)
+  let totalIncome = 0;
+  let totalExpenses = 0;
+  transactionsByBalance.forEach(trx => {
+    const amt = parseInt(trx.amount) || 0;
+    if (amt > 0) totalIncome += amt;
+    else totalExpenses += Math.abs(amt);
+  });
+
+  // C. Filter untuk List di tab "Statistics" (berdasarkan tombol Income/Expenses)
+  const statisticsList = transactionsByBalance.filter(trx => {
+    const amt = parseInt(trx.amount) || 0;
+    return statFilter === "income" ? amt > 0 : amt < 0;
+  });
+
+  // D. Fungsi pembantu untuk mengambil angka tanggal dari string "April 06, 2026"
+  const getDayFromDate = (dateString) => {
+    if (!dateString) return null;
+    const parts = String(dateString).split(" ");
+    // Mengambil kata kedua ("06,"), menghapus koma, lalu mengubah jadi angka (6)
+    // BUG FIX TERPENTING: Gunakan parts[1] (karena array), BUKAN parts.replace()
+    if (parts.length >= 2 && parts[1]) {
+      return parseInt(parts[1].replace(",", ""), 10);
+    }
+    return null;
+  };
+
+  // E. Ambil tanggal berapa saja yang punya transaksi bulan ini (untuk titik merah di Kalender)
+  const transactionDates = transactionsByBalance
+    .map(trx => getDayFromDate(trx.date))
+    .filter(day => day !== null);
+
+  // F. Ambil transaksi khusus untuk hari yang sedang di-klik di Kalender
+  const calendarTransactions = transactionsByBalance.filter(trx => 
+    getDayFromDate(trx.date) === selectedDate
+  );
+
+  const weeklyData = [
+    { week: 1, income: 0, expense: 0 },
+    { week: 2, income: 0, expense: 0 },
+    { week: 3, income: 0, expense: 0 },
+    { week: 4, income: 0, expense: 0 },
+  ];
+
+  let maxChartValue = 0;
+
+  // Kelompokkan transaksi ke dalam minggu yang sesuai
+  transactionsByBalance.forEach((trx) => {
+    const day = getDayFromDate(trx.date);
+    if (!day) return;
+
+    // Tentukan ini masuk minggu ke berapa
+    let weekIndex = 0;
+    if (day > 7 && day <= 14) weekIndex = 1;
+    else if (day > 14 && day <= 21) weekIndex = 2;
+    else if (day > 21) weekIndex = 3;
+
+    // Masukkan nominalnya
+    const amt = parseInt(trx.amount) || 0;
+    if (amt > 0) {
+      weeklyData[weekIndex].income += amt;
+    } else {
+      weeklyData[weekIndex].expense += Math.abs(amt);
+    }
+  });
+
+  // Cari angka tertinggi untuk menentukan batas skala 100% grafik
+  weeklyData.forEach(w => {
+    if (w.income > maxChartValue) maxChartValue = w.income;
+    if (w.expense > maxChartValue) maxChartValue = w.expense;
+  });
+
+  // Hindari pembagian dengan 0 jika datanya masih kosong semua
+  if (maxChartValue === 0) maxChartValue = 1;
+
+  // Hitung total uang masuk/keluar di hari yang dipilih tersebut
+  let dailyTotal = 0;
+  calendarTransactions.forEach(trx => {
+    dailyTotal += (parseInt(trx.amount) || 0);
+  });
+
+// --- LOGIKA KALENDER ASLI (Vanilla JS) ---
+  const currentYear = currentMonthView.getFullYear();
+  const currentMonth = currentMonthView.getMonth(); // 0 (Jan) sampai 11 (Des)
+  
+  // Mengambil nama bulan dalam bahasa Inggris (contoh: "April")
+  const monthName = currentMonthView.toLocaleString('en-US', { month: 'long' });
+
+  // 1. Cari tahu bulan ini ada berapa hari
+  const daysInMonthCount = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
+
+  // 2. Cari tahu tanggal 1 jatuh di hari apa?
+  let firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+  const emptyBoxes = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+
+  // 3. Fungsi untuk tombol navigasi bulan
+const handlePrevMonth = () => {
+    setCurrentMonthView(new Date(currentYear, currentMonth - 1, 1));
+    setSelectedDate(null);
+  };
+
+const handleNextMonth = () => {
+    setCurrentMonthView(new Date(currentYear, currentMonth + 1, 1));
+    setSelectedDate(null);
+  };
+
+  // Fungsi Render Icon Dinamis
+  const renderIcon = (category) => {
+    switch(category) {
+      case "Food": return <Utensils size={24} color="white" />;
+      case "Transport": return <Car size={24} color="white" />;
+      case "Shoppings": return <ShoppingBag size={24} color="white" />;
+      case "Utilities": return <Zap size={24} color="white" />;
+      case "Entertainment": return <Tv size={24} color="white" />;
+      default: return <Banknote size={24} color="white" />;
+    }
+  };
+
+  return (
+    <div className="screen-content">
+      <header className="header">
+        <h1>Overview</h1>
+      </header>
+
+      {/* TOP SUMMARY CARDS (Sekarang Datanya Dinamis) */}
+      <section className="overview-summary">
+        <div className="summary-card">
+          <span className="summary-label">Total Income</span>
+          <h3 className="summary-value">Rp{totalIncome.toLocaleString("id-ID")}</h3>
+        </div>
+        <div className="summary-card">
+          <span className="summary-label">Total Expenses</span>
+          <h3 className="summary-value">Rp{totalExpenses.toLocaleString("id-ID")}</h3>
+        </div>
+      </section>
+
+      {/* TABS & BALANCE DROPDOWN */}
+      <section className="overview-header-actions" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px", marginBottom: "24px" }}>
+        <div className="overview-tabs" style={{ padding: 0, marginBottom: 0, borderBottom: "none" }}>
+          <span className={`tab-item ${overviewTab === "statistics" ? "active" : ""}`} onClick={() => setOverviewTab("statistics")}>
+            Statistics
+          </span>
+          <span className={`tab-item ${overviewTab === "calendar" ? "active" : ""}`} onClick={() => setOverviewTab("calendar")}>
+            Calender
+          </span>
+        </div>
+
+        <div style={{ position: "relative" }}>
+          <div className="overview-balance-btn" onClick={() => setIsBalanceOpen(!isBalanceOpen)}>
+            <span>{selectedBalance === "Total Balance" ? "All" : selectedBalance}</span>
+            <ChevronDown size={14} style={{ transform: isBalanceOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+          </div>
+
+          {isBalanceOpen && (
+            <div className="balance-dropdown-list" style={{ top: "35px", right: "0", left: "auto", minWidth: "120px", zIndex: 20 }}>
+              {balanceCategories.map((item) => (
+                <div key={item} className={`dropdown-item ${selectedBalance === item ? "active" : ""}`} onClick={() => { setSelectedBalance(item); setIsBalanceOpen(false); }}>
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CONTENT AREA */}
+      <div className="tab-content-area">
+        
+        {/* === TAMPILAN: STATISTICS === */}
+        {overviewTab === "statistics" && (
+          <div className="statistics-content">
+            
+{/* Bar Chart Dinamis */}
+            <div className="chart-area">
+              <div className="y-axis">
+                <span>Rp3jt</span><span>Rp2jt</span><span>Rp1jt</span><span>Rp500k</span><span>Rp0</span>
+              </div>
+              <div className="bars-container">
+                <div className="chart-grid-line line-1jt"></div>
+                <div className="chart-grid-line line-2jt"></div>
+                <div className="chart-grid-line line-3jt"></div>
+                
+                {/* Looping data mingguan untuk membuat batang grafik yang merespon data */}
+                {weeklyData.map((data) => {
+                  const incPercent = (data.income / maxChartValue) * 100;
+                  const expPercent = (data.expense / maxChartValue) * 100;
+
+                  return (
+                    <div className="bar-group" key={`week-${data.week}`}>
+                      <div className="bar bar-inc" style={{ height: `${incPercent}%`, transition: "height 0.5s ease" }}></div>
+                      <div className="bar bar-exp" style={{ height: `${expPercent}%`, transition: "height 0.5s ease" }}></div>
+                      <span className="x-label">week {data.week}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="stat-filters">
+              <button className={`filter-btn ${statFilter === "income" ? "active" : ""}`} onClick={() => setStatFilter("income")}>Income</button>
+              <button className={`filter-btn ${statFilter === "expenses" ? "active" : ""}`} onClick={() => setStatFilter("expenses")}>Expenses</button>
+            </div>
+
+            {/* List Transaksi Statistics Dinamis */}
+            <div className="transaction-list">
+              {statisticsList.length === 0 ? (
+                <p style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>Belum ada data.</p>
+              ) : (
+                statisticsList.map((trx) => (
+                  <div className="transaction-item" key={trx.id}>
+                    <div className="transaction-icon-box">{renderIcon(trx.category)}</div>
+                    <div className="transaction-info">
+                      <p className="transaction-title">{trx.title}</p>
+                      <p className="transaction-type">{trx.type}</p>
+                    </div>
+                    <div className="transaction-amount-data">
+                      <p className={trx.amount > 0 ? "amount-positive" : "amount-negative"}>
+                        {trx.amount > 0 ? "+" : ""}Rp{Math.abs(trx.amount).toLocaleString("id-ID")}
+                      </p>
+                      <p className="transaction-date">{trx.date}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* === TAMPILAN: CALENDAR === */}
+        {overviewTab === "calendar" && (
+          <div className="calendar-content">
+            {/* HEADER KALENDER: < Bulan > Tahun */}
+            <div className="calendar-month-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              
+              {/* Bagian Kiri: Navigasi Bulan */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span onClick={handlePrevMonth} style={{ cursor: "pointer", fontSize: "18px", fontWeight: "bold" }}>&lt;</span>
+                <h3 style={{ margin: 0 }}>{monthName}</h3>
+                <span onClick={handleNextMonth} style={{ cursor: "pointer", fontSize: "18px", fontWeight: "bold" }}>&gt;</span>
+              </div>
+
+              {/* Bagian Kanan: Tahun */}
+              <h3 style={{ margin: 0, fontWeight: "normal" }}>{currentYear}</h3>
+              
+            </div>
+
+            <div className="calendar-grid">
+              {/* 1. Header Hari (Sekarang dimulai dari Sunday / Su) */}
+              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+                <div key={day} className="cal-day-name">{day}</div>
+              ))}
+
+              {/* 2. Kotak Kosong Pendorong Tanggal 1 (Diberi &nbsp; agar tidak collapse) */}
+              {emptyBoxes.map((_, index) => (
+                <div key={`empty-${index}`} className="cal-day-box empty">&nbsp;</div>
+              ))}
+
+              {/* 3. Render angka tanggal seperti biasa */}
+              {daysInMonth.map((num) => (
+                <div 
+                  key={num} 
+                  className={`cal-day-box ${num === selectedDate ? "active" : ""}`}
+                  onClick={() => setSelectedDate(num)}
+                >
+                  <span className="cal-date-num">{num}</span>
+                  {transactionDates.includes(num) && <div className="cal-dot"></div>}
+                </div>
+              ))}
+            </div>
+
+            <div className="calendar-daily-summary">
+              <h4>Date: {selectedDate}</h4>
+              <span className={dailyTotal > 0 ? "amount-positive" : "daily-total-expense"}>
+                {dailyTotal > 0 ? "+" : ""}Rp{Math.abs(dailyTotal).toLocaleString("id-ID")}
+              </span>
+            </div>
+
+            {/* List Transaksi Calendar Dinamis */}
+            <div className="transaction-list">
+              {calendarTransactions.length === 0 ? (
+                <p style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>Tidak ada transaksi di hari ini.</p>
+              ) : (
+                calendarTransactions.map((trx) => (
+                  <div className="transaction-item" key={trx.id}>
+                    <div className="transaction-icon-box">{renderIcon(trx.category)}</div>
+                    <div className="transaction-info">
+                      <p className="transaction-title">{trx.title}</p>
+                      <p className="transaction-type">{trx.type}</p>
+                    </div>
+                    <div className="transaction-amount-data">
+                      <p className={trx.amount > 0 ? "amount-positive" : "amount-negative"}>
+                        {trx.amount > 0 ? "+" : ""}Rp{Math.abs(trx.amount).toLocaleString("id-ID")}
+                      </p>
+                      <p className="transaction-date">{trx.date}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+  } catch (error) {
+    return (
+      <div className="screen-content" style={{ padding: "30px", color: "red", backgroundColor: "white" }}>
+        <h2>Mohon maaf, terjadi Error di Overview:</h2>
+        <p style={{ fontWeight: "bold" }}>Pesan: {error.message}</p>
+        <pre style={{ whiteSpace: "pre-wrap", fontSize: "12px", background: "#f8d7da", color: "#721c24", padding: "10px", borderRadius: "5px" }}>{error.stack}</pre>
+      </div>
+    );
+  }
+}
