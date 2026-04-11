@@ -9,10 +9,22 @@ app.use(cors()); // Mengizinkan React mengakses server ini
 app.use(express.json()); // Membaca data JSON dari React
 
 // Autentikasi ke Google Cloud menggunakan Service Account
-const auth = new google.auth.GoogleAuth({
-  keyFile: 'credentials.json', // Pastikan nama filenya sama
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'], // Izin khusus untuk Google Sheets
-});
+// Siapkan opsi dasarnya
+let authOptions = {
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+};
+
+// Cek apakah sedang berjalan di Render (mencari variabel Environment)
+if (process.env.GOOGLE_CREDS_JSON) {
+  // Parsing teks JSON dari Render menjadi objek Javascript
+  authOptions.credentials = JSON.parse(process.env.GOOGLE_CREDS_JSON);
+} else {
+  // Jika berjalan di laptop, baca dari file lokal
+  authOptions.keyFile = 'credentials.json';
+}
+
+// Inisialisasi GoogleAuth dengan opsi yang sudah disesuaikan
+const auth = new google.auth.GoogleAuth(authOptions);
 
 // Masukkan Spreadsheet ID kamu di sini
 const spreadsheetId = '1YqmvUgwtyLrw_uPnre4wDQwy4vGGb_V5d8UCVN0BVoY'; 
