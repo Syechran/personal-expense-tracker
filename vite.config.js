@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'My Expense Tracker',
-        short_name: 'ExpenseApp',
+        name: 'Keuangan Pribadi',
+        short_name: 'Keuangan',
         description: 'Aplikasi pencatat keuangan pribadi super cepat',
         theme_color: '#000000', // Warna hitam sesuai desainmu
         background_color: '#ffffff',
