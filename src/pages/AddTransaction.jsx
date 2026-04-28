@@ -80,7 +80,7 @@ export default function AddTransaction({ onClose }) {
     };
 
     try {
-      const response = await fetch("/api/transactionss", {
+      const response = await fetch("/api/transactions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
