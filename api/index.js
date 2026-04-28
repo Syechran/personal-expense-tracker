@@ -18,7 +18,7 @@ if (process.env.GOOGLE_CREDS_JSON) {
   authOptions.credentials = JSON.parse(process.env.GOOGLE_CREDS_JSON);
 } else {
   // Jika berjalan di laptop, baca dari file lokal
-  authOptions.keyFile = 'D:/Project/Keuangan/personal-expense-tracker/credentials.json';
+  authOptions.keyFile = 'credentials.json';
 }
 
 const auth = new google.auth.GoogleAuth(authOptions);
