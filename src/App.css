@@ -16,6 +16,9 @@ html,
 body {
   height: 100%;
   height: 100dvh;
+  overscroll-behavior: none; /* Cegah bounce/overscroll di Android & iOS */
+  position: fixed;           /* Kunci viewport agar tidak bergeser saat keyboard muncul */
+  width: 100%;
 }
 
 body {
@@ -37,6 +40,8 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  overscroll-behavior: none;  /* Cegah scroll bocor ke luar container */
+  will-change: transform;     /* Hint GPU rendering untuk mengurangi jitter */
 }
 
 .nav-item {
@@ -263,8 +268,9 @@ body {
   gap: 16px;
   flex: 1;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* Penting untuk iOS/Android mobile scroll */
-  touch-action: pan-y;               /* Izinkan scroll vertikal touch di mobile */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain; /* Scroll tidak bocor ke halaman utama */
   padding-bottom: 24px;
   scrollbar-width: none;
   -ms-overflow-style: none;
