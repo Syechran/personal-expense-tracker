@@ -263,6 +263,8 @@ body {
   gap: 16px;
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Penting untuk iOS/Android mobile scroll */
+  touch-action: pan-y;               /* Izinkan scroll vertikal touch di mobile */
   padding-bottom: 24px;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -390,8 +392,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding-bottom: 100px;
-  /* Ruang untuk bottom nav yang absolute */
+  padding-bottom: 80px; /* Ruang untuk bottom nav yang absolute */
 }
 
 /* --- OVERVIEW PAGE STYLES --- */
@@ -471,6 +472,7 @@ body {
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  touch-action: pan-y;
 }
 
 /* Dummy Bar Chart CSS murni */
