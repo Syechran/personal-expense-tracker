@@ -12,12 +12,16 @@
     sans-serif;
 }
 
+html, body {
+  height: 100%;
+  height: 100dvh;
+}
+
 body {
   background-color: #f0f0f0;
-
   display: flex;
-
   justify-content: center;
+  overflow: hidden;
 }
 
 /* Membatasi lebar aplikasi agar terlihat seperti HP (412px) */
@@ -26,11 +30,12 @@ body {
   width: 100%;
   max-width: 412px;
   height: 100vh;
+  height: 100dvh;
   background-color: #ffffff;
   position: relative;
   overflow: hidden;
-  padding-bottom: 80px;
-  /* Ruang untuk bottom nav */
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-item {
@@ -373,14 +378,18 @@ body {
 .screen-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 .main-content {
-  height: calc(100vh - 80px);
-  /* Sisa tinggi layar dikurangi navigasi bawah */
-  overflow-y: auto;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 100px; /* Ruang untuk bottom nav yang absolute */
 }
 
 /* --- OVERVIEW PAGE STYLES --- */
