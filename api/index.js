@@ -113,6 +113,66 @@ app.get('/api/transactions', async (req, res) => {
   }
 });
 
+// --- ROUTE 4: MENGHAPUS TRANSAKSI ---
+app.delete('/api/transactions/:id', async (req, res) => {
+  try {
+    const transactionId = req.params.id;
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: client });
+
+    // 1. Dapatkan Sheet ID (biasanya 0 untuk Sheet pertama)
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId,
+    });
+    
+    // Asumsi kita menggunakan sheet pertama (Sheet1)
+    const sheetId = spreadsheet.data.sheets[0].properties.sheetId;
+
+    // 2. Ambil semua data di kolom A untuk mencari nomor baris
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Sheet1!A:A',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ status: 'Error', message: 'Tidak ada data di Sheet' });
+    }
+
+    // 3. Cari indeks baris (ingat index array mulai dari 0, sesuai dengan startIndex API)
+    const rowIndex = rows.findIndex(row => row[0] === transactionId);
+
+    if (rowIndex === -1) {
+      return res.status(404).json({ status: 'Error', message: 'Transaksi tidak ditemukan' });
+    }
+
+    // 4. Hapus baris menggunakan batchUpdate
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: sheetId,
+                dimension: 'ROWS',
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1
+              }
+            }
+          }
+        ]
+      }
+    });
+
+    res.json({ status: 'Success', message: 'Transaksi berhasil dihapus!' });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 'Error', message: error.message });
+  }
+});
+
 // --- PENGATURAN SERVER KHUSUS VERCEL & LOCALHOST ---
 if (!process.env.VERCEL) {
   const PORT = 5000;

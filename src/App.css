@@ -24,16 +24,13 @@ body {
 
 .app-container {
   width: 100%;
-
   max-width: 412px;
-
-  min-height: 100vh;
-
+  height: 100vh;
   background-color: #ffffff;
-
   position: relative;
-
-  padding-bottom: 80px; /* Ruang untuk bottom nav */
+  overflow: hidden;
+  padding-bottom: 80px;
+  /* Ruang untuk bottom nav */
 }
 
 .nav-item {
@@ -63,14 +60,14 @@ body {
   color: #ffffff;
   margin: 0 20px;
   border-radius: 16px;
-  padding: 24px; 
+  padding: 24px;
   /* HAPUS overflow, max-height, dan transition dari sini! */
 }
 
 /* Saat state isExpanded = true, class ini aktif */
 .balance-card.expanded {
   /* Kita patok batas tinggi yang jauh lebih besar dari isi dalamnya */
-  max-height: 500px; 
+  max-height: 500px;
 }
 
 .balance-header {
@@ -105,7 +102,8 @@ body {
   margin-top: 24px;
   overflow: hidden;
   opacity: 1;
-  max-height: 100px; /* Cukup untuk menampung teks Income/Expense */
+  max-height: 100px;
+  /* Cukup untuk menampung teks Income/Expense */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -115,7 +113,7 @@ body {
   margin-top: 0;
   opacity: 0;
   /* Opsional: agar margin gap-nya juga hilang */
-  gap: 0; 
+  gap: 0;
   border: none;
   overflow: hidden;
 }
@@ -167,6 +165,7 @@ body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 .balance-list-scrollable::-webkit-scrollbar {
   display: none;
 
@@ -221,7 +220,11 @@ body {
 /* Transactions */
 
 .transactions-section {
-  padding: 24px 20px;
+  padding: 24px 20px 40px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 .section-header {
@@ -250,10 +253,17 @@ body {
 
 .transaction-list {
   display: flex;
-
   flex-direction: column;
-
   gap: 16px;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.transaction-list::-webkit-scrollbar {
+  display: none;
 }
 
 .transaction-item {
@@ -361,13 +371,15 @@ body {
 }
 
 .screen-content {
-  padding-bottom: 20px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .main-content {
-  height: calc(100vh - 80px); /* Sisa tinggi layar dikurangi navigasi bawah */
+  height: calc(100vh - 80px);
+  /* Sisa tinggi layar dikurangi navigasi bawah */
   overflow-y: auto;
 }
 
@@ -393,13 +405,15 @@ body {
 
 .summary-card .summary-label {
   font-size: 12px;
-  color: #a0a0a0; /* Abu-abu seperti Figma */
+  color: #a0a0a0;
+  /* Abu-abu seperti Figma */
 }
 
 .summary-card .summary-value {
   font-size: 16px;
   font-weight: 700;
-  text-align: left; /* Biar nempel kiri */
+  text-align: left;
+  /* Biar nempel kiri */
 }
 
 /* Tabs: Statistics & Calendar */
@@ -414,15 +428,18 @@ body {
 .tab-item {
   font-size: 18px;
   font-weight: 600;
-  color: #a0a0a0; /* Abu-abu saat tidak aktif */
+  color: #a0a0a0;
+  /* Abu-abu saat tidak aktif */
   padding-bottom: 8px;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .tab-item.active {
-  color: #000000; /* Hitam saat aktif */
-  border-bottom: 2px solid #000000; /* Opsional: garis bawah biar makin jelas */
+  color: #000000;
+  /* Hitam saat aktif */
+  border-bottom: 2px solid #000000;
+  /* Opsional: garis bawah biar makin jelas */
 }
 
 .tab-content-area {
@@ -446,7 +463,8 @@ body {
   font-size: 10px;
   color: #888;
   padding-right: 12px;
-  height: 160px; /* Sesuaikan dengan tinggi batang */
+  height: 160px;
+  /* Sesuaikan dengan tinggi batang */
 }
 
 .bars-container {
@@ -454,7 +472,8 @@ body {
   display: flex;
   justify-content: space-between;
   border-bottom: 1px dashed #ccc;
-  height: 160px; /* Tinggi batang maksimal */
+  height: 160px;
+  /* Tinggi batang maksimal */
   position: relative;
 }
 
@@ -466,36 +485,47 @@ body {
   border-bottom: 1px dashed #e0e0e0;
   z-index: 0;
 }
+
 .line-1jt {
   top: 33%;
 }
+
 .line-2jt {
   top: 66%;
 }
+
 .line-3jt {
   top: 0%;
-} /* Paling atas */
+}
+
+/* Paling atas */
 
 .bar-group {
   display: flex;
-  align-items: flex-end; /* Batang nempel bawah */
-  gap: 4px; /* Jarak antara hijau dan merah */
+  align-items: flex-end;
+  /* Batang nempel bawah */
+  gap: 4px;
+  /* Jarak antara hijau dan merah */
   height: 100%;
   position: relative;
   z-index: 1;
 }
 
 .bar {
-  width: 16px; /* Ketebalan batang seperti Figma */
-  border-radius: 4px 4px 0 0; /* Bulat di atas saja */
+  width: 16px;
+  /* Ketebalan batang seperti Figma */
+  border-radius: 4px 4px 0 0;
+  /* Bulat di atas saja */
 }
 
 .bar-inc {
-  background-color: #00ff00; /* Hijau Income */
+  background-color: #00ff00;
+  /* Hijau Income */
 }
 
 .bar-exp {
-  background-color: #ff0000; /* Merah Expenses */
+  background-color: #ff0000;
+  /* Merah Expenses */
 }
 
 .x-label {
@@ -528,7 +558,8 @@ body {
 }
 
 .filter-btn.active {
-  background: #000000; /* Hitam saat aktif seperti Figma */
+  background: #000000;
+  /* Hitam saat aktif seperti Figma */
   color: #ffffff;
 }
 
@@ -543,8 +574,10 @@ body {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr); /* 7 hari dalam seminggu */
-  gap: 12px 8px; /* Jarak vertikal horizontal kotak tanggal */
+  grid-template-columns: repeat(7, 1fr);
+  /* 7 hari dalam seminggu */
+  gap: 12px 8px;
+  /* Jarak vertikal horizontal kotak tanggal */
   text-align: center;
   margin-bottom: 24px;
 }
@@ -552,7 +585,8 @@ body {
 .cal-day-name {
   font-size: 12px;
   font-weight: 600;
-  color: #666; /* Mo-Su agak pudar */
+  color: #666;
+  /* Mo-Su agak pudar */
 }
 
 .cal-day-box {
@@ -564,7 +598,8 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin: auto; /* Kotak di tengah grid cell */
+  margin: auto;
+  /* Kotak di tengah grid cell */
   border-radius: 50%;
   cursor: pointer;
   position: relative;
@@ -601,7 +636,8 @@ body {
 }
 
 .daily-total-expense {
-  color: #ff0000; /* Merah seperti Figma */
+  color: #ff0000;
+  /* Merah seperti Figma */
   font-size: 14px;
 }
 
@@ -615,12 +651,12 @@ body {
   width: 100%;
   height: 100%;
   /* UBAH DI SINI: Gunakan warna hitam transparan agar modal lebih menonjol */
-  background-color: rgba(0, 0, 0, 0.4); 
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   z-index: 100;
   /* Tambahan opsional: agar modal selalu menempel di bawah */
-  justify-content: flex-end; 
+  justify-content: flex-end;
 }
 
 .add-tx-header-top {
@@ -639,7 +675,7 @@ body {
 .add-tx-modal {
   background-color: #ffffff;
   /* Hapus flex: 1 jika ingin tinggi modal menyesuaikan isinya, atau biarkan jika ingin full screen */
-  flex: 2; 
+  flex: 2;
   border-radius: 24px 24px 0 0;
   padding: 24px 20px;
   overflow-y: auto;
@@ -671,6 +707,7 @@ body {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -680,6 +717,7 @@ body {
   from {
     transform: translateY(0);
   }
+
   to {
     transform: translateY(100%);
   }
@@ -694,6 +732,7 @@ body {
   cursor: pointer;
   color: #000000;
 }
+
 .back-text {
   font-weight: 700;
   font-size: 16px;
@@ -763,7 +802,8 @@ body {
   gap: 12px;
   font-size: 14px;
   cursor: pointer;
-  border: 2px solid transparent; /* Persiapan untuk state active */
+  border: 2px solid transparent;
+  /* Persiapan untuk state active */
   transition: all 0.2s;
   border-color: black;
 }
@@ -807,16 +847,19 @@ body {
   color: #ffffff;
   padding: 12px 16px;
   border-radius: 8px;
-  display: flex; /* Ubah dari inline-flex ke flex */
-  align-items: center; /* Tetap pertahankan ini agar teks & icon sejajar vertikal */
-  justify-content: flex-start; /* INI KUNCINYA UNTUK RATA KIRI */
+  display: flex;
+  /* Ubah dari inline-flex ke flex */
+  align-items: center;
+  /* Tetap pertahankan ini agar teks & icon sejajar vertikal */
+  justify-content: flex-start;
+  /* INI KUNCINYA UNTUK RATA KIRI */
   gap: 8px;
   font-size: 14px;
   cursor: pointer;
-  
+
   /* Opsional: Tambahkan ini jika kamu ingin tombolnya sedikit lebih panjang 
      atau memenuhi container seperti di desain lainnya */
-  /* width: 100%; */ 
+  /* width: 100%; */
 }
 
 /* Bottom Action Buttons (Save / Draft) */
@@ -850,21 +893,30 @@ body {
 /* Container dropdown yang melayang */
 .balance-dropdown-list {
   position: absolute;
-  top: 70px; /* Di bawah label dan tombol */
+  top: 70px;
+  /* Di bawah label dan tombol */
   left: 0;
   right: 0;
-  background-color: #1c1c1e; /* Warna abu gelap agar kontras dengan modal putih */
+  background-color: #1c1c1e;
+  /* Warna abu gelap agar kontras dengan modal putih */
   border: 1px solid #333;
   border-radius: 12px;
   z-index: 10;
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
   animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-item {
@@ -986,9 +1038,72 @@ body {
   color: #ffffff;
 }
 
-.balance-details::-webkit-scrollbar { display: none; }
+.balance-details::-webkit-scrollbar {
+  display: none;
+}
 
 @keyframes scaleUp {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* --- SWIPE TO DELETE STYLES --- */
+.transaction-swipe-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.transaction-swipe-action {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 60px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.transaction-swipe-action.visible {
+  opacity: 1;
+}
+
+.delete-icon-btn {
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: #000000;
+}
+
+.transaction-content-wrapper {
+  position: relative;
+  width: 100%;
+  background-color: #ffffff;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 1;
+  touch-action: pan-y;
+}
+
+.transaction-content-wrapper.swiped {
+  transform: translateX(65px);
 }

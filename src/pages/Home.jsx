@@ -7,7 +7,8 @@ import {
   Banknote,
   Ticket,
   Car,
-  MinusCircle
+  MinusCircle,
+  Trash2
 } from "lucide-react";
 
 export default function Home() {
@@ -20,6 +21,14 @@ export default function Home() {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
+
+  // States for swipe to delete
+  const [swipedTransactionId, setSwipedTransactionId] = useState(null);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // State for See all toggle
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
 
   const [balanceData, setBalanceData] = useState({
     "Total Balance": { amount: 0, income: 0, expenses: 0 },
@@ -159,6 +168,71 @@ useEffect(() => {
     setCategoryToDelete(null);
   };
 
+  // --- SWIPE TO DELETE LOGIC ---
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e, id) => {
+    const touchCurrentX = e.touches[0].clientX;
+    const diff = touchCurrentX - touchStartX;
+    
+    // Geser ke kanan (swipe right) memunculkan tombol hapus
+    if (diff > 50) {
+      setSwipedTransactionId(id);
+    } 
+    // Geser ke kiri menyembunyikan tombol hapus
+    else if (diff < -50 && swipedTransactionId === id) {
+      setSwipedTransactionId(null);
+    }
+  };
+
+  // --- FILTER TRANSAKSI UNTUK BULAN INI ---
+  const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
+  const currentYear = new Date().getFullYear();
+
+  const getMonthAndYearFromDate = (dateString) => {
+    if (!dateString) return null;
+    const parts = String(dateString).split(" ");
+    if (parts.length >= 3) {
+      return { month: parts[0], year: parseInt(parts[2], 10) };
+    }
+    return null;
+  };
+
+  const filteredTransactions = showAllTransactions 
+    ? transactions 
+    : transactions.filter(trx => {
+        const parsed = getMonthAndYearFromDate(trx.date);
+        return parsed && parsed.month === currentMonthName && parsed.year === currentYear;
+      });
+
+  const handleDeleteTransaction = async (id) => {
+    if (!window.confirm("Yakin ingin menghapus transaksi ini?")) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      
+      if (result.status === 'Success') {
+        const updatedTransactions = transactions.filter(trx => trx.id !== id);
+        setTransactions(updatedTransactions);
+        calculateBalances(updatedTransactions);
+        setSwipedTransactionId(null);
+      } else {
+        alert(result.message || "Gagal menghapus transaksi");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan jaringan");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="screen-content">
       <header className="header">
@@ -241,31 +315,61 @@ useEffect(() => {
       <section className="transactions-section">
         <div className="section-header">
           <h3>Transactions</h3>
-          <span className="see-all">See all</span>
+          <span 
+            className="see-all" 
+            onClick={() => setShowAllTransactions(!showAllTransactions)}
+          >
+            {showAllTransactions ? "Show less" : "See all"}
+          </span>
         </div>
         <div className="transaction-list">
-          {transactions.map((trx) => {
+          {filteredTransactions.map((trx) => {
             let iconDisplay = <Banknote size={24} color="white" />; // default
             if (trx.category === "Food") iconDisplay = <Utensils size={24} color="white" />;
             if (trx.category === "Transport") iconDisplay = <Car size={24} color="white" />;
 
             return (
-              <div className="transaction-item" key={trx.id}>
-                <div className="transaction-icon-box">{iconDisplay}</div>
-                <div className="transaction-info">
-                  <p className="transaction-title">{trx.title}</p>
-                  <p className="transaction-type">{trx.type}</p>
-                </div>
-                <div className="transaction-amount-data">
-                  <p
-                    className={
-                      trx.amount > 0 ? "amount-positive" : "amount-negative"
-                    }
+              <div 
+                className="transaction-swipe-container" 
+                key={trx.id}
+                onTouchStart={handleTouchStart}
+                onTouchMove={(e) => handleTouchMove(e, trx.id)}
+              >
+                {/* Tombol Hapus (Tersembunyi di kiri) */}
+                <div className={`transaction-swipe-action ${swipedTransactionId === trx.id ? 'visible' : ''}`}>
+                  <button 
+                    className="delete-icon-btn" 
+                    onClick={() => handleDeleteTransaction(trx.id)}
+                    disabled={isDeleting}
+                    style={{ opacity: isDeleting && swipedTransactionId === trx.id ? 0.5 : 1 }}
                   >
-                    {trx.amount > 0 ? "+" : ""}Rp
-                    {Math.abs(trx.amount).toLocaleString("id-ID")}
-                  </p>
-                  <p className="transaction-date">{trx.date}</p>
+                    <Trash2 size={24} color={isDeleting && swipedTransactionId === trx.id ? "#888" : "#000"} />
+                  </button>
+                </div>
+
+                {/* Konten Transaksi (Bergeser ke kanan saat di-swipe) */}
+                <div 
+                  className={`transaction-content-wrapper ${swipedTransactionId === trx.id ? 'swiped' : ''}`}
+                  onClick={() => { if(swipedTransactionId === trx.id) setSwipedTransactionId(null) }}
+                >
+                  <div className="transaction-item">
+                    <div className="transaction-icon-box">{iconDisplay}</div>
+                    <div className="transaction-info">
+                      <p className="transaction-title">{trx.title}</p>
+                      <p className="transaction-type">{trx.type}</p>
+                    </div>
+                    <div className="transaction-amount-data">
+                      <p
+                        className={
+                          trx.amount > 0 ? "amount-positive" : "amount-negative"
+                        }
+                      >
+                        {trx.amount > 0 ? "+" : ""}Rp
+                        {Math.abs(trx.amount).toLocaleString("id-ID")}
+                      </p>
+                      <p className="transaction-date">{trx.date}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
