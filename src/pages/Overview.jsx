@@ -335,32 +335,35 @@ export default function Overview() {
                 </div>
               </div>
 
-              <div className="stat-filters">
-                <button className={`filter-btn ${statFilter === "income" ? "active" : ""}`} onClick={() => setStatFilter("income")}>Income</button>
-                <button className={`filter-btn ${statFilter === "expenses" ? "active" : ""}`} onClick={() => setStatFilter("expenses")}>Expenses</button>
-              </div>
+              {/* Scrollable frame untuk filter + list transaksi statistics */}
+              <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
+                <div className="stat-filters">
+                  <button className={`filter-btn ${statFilter === "income" ? "active" : ""}`} onClick={() => setStatFilter("income")}>Income</button>
+                  <button className={`filter-btn ${statFilter === "expenses" ? "active" : ""}`} onClick={() => setStatFilter("expenses")}>Expenses</button>
+                </div>
 
-              {/* List Transaksi Statistics Dinamis */}
-              <div className="transaction-list">
-                {statisticsList.length === 0 ? (
-                  <p style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>Belum ada data.</p>
-                ) : (
-                  statisticsList.map((trx) => (
-                    <div className="transaction-item" key={trx.id}>
-                      <div className="transaction-icon-box">{renderIcon(trx.category)}</div>
-                      <div className="transaction-info">
-                        <p className="transaction-title">{trx.title}</p>
-                        <p className="transaction-type">{trx.type}</p>
+                {/* List Transaksi Statistics Dinamis */}
+                <div className="transaction-list">
+                  {statisticsList.length === 0 ? (
+                    <p style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>Belum ada data.</p>
+                  ) : (
+                    statisticsList.map((trx) => (
+                      <div className="transaction-item" key={trx.id}>
+                        <div className="transaction-icon-box">{renderIcon(trx.category)}</div>
+                        <div className="transaction-info">
+                          <p className="transaction-title">{trx.title}</p>
+                          <p className="transaction-type">{trx.type}</p>
+                        </div>
+                        <div className="transaction-amount-data">
+                          <p className={trx.amount > 0 ? "amount-positive" : "amount-negative"}>
+                            {trx.amount > 0 ? "+" : ""}Rp{Math.abs(trx.amount).toLocaleString("id-ID")}
+                          </p>
+                          <p className="transaction-date">{trx.date}</p>
+                        </div>
                       </div>
-                      <div className="transaction-amount-data">
-                        <p className={trx.amount > 0 ? "amount-positive" : "amount-negative"}>
-                          {trx.amount > 0 ? "+" : ""}Rp{Math.abs(trx.amount).toLocaleString("id-ID")}
-                        </p>
-                        <p className="transaction-date">{trx.date}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -407,34 +410,37 @@ export default function Overview() {
                 ))}
               </div>
 
-              <div className="calendar-daily-summary">
-                <h4>Date: {selectedDate}</h4>
-                <span className={dailyTotal > 0 ? "amount-positive" : "daily-total-expense"}>
-                  {dailyTotal > 0 ? "+" : ""}Rp{Math.abs(dailyTotal).toLocaleString("id-ID")}
-                </span>
-              </div>
+              {/* Scrollable frame untuk summary + list transaksi kalender */}
+              <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minHeight: 0 }}>
+                <div className="calendar-daily-summary">
+                  <h4>Date: {selectedDate}</h4>
+                  <span className={dailyTotal > 0 ? "amount-positive" : "daily-total-expense"}>
+                    {dailyTotal > 0 ? "+" : ""}Rp{Math.abs(dailyTotal).toLocaleString("id-ID")}
+                  </span>
+                </div>
 
-              {/* List Transaksi Calendar Dinamis */}
-              <div className="transaction-list">
-                {calendarTransactions.length === 0 ? (
-                  <p style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>Tidak ada transaksi di hari ini.</p>
-                ) : (
-                  calendarTransactions.map((trx) => (
-                    <div className="transaction-item" key={trx.id}>
-                      <div className="transaction-icon-box">{renderIcon(trx.category)}</div>
-                      <div className="transaction-info">
-                        <p className="transaction-title">{trx.title}</p>
-                        <p className="transaction-type">{trx.type}</p>
+                {/* List Transaksi Calendar Dinamis */}
+                <div className="transaction-list">
+                  {calendarTransactions.length === 0 ? (
+                    <p style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>Tidak ada transaksi di hari ini.</p>
+                  ) : (
+                    calendarTransactions.map((trx) => (
+                      <div className="transaction-item" key={trx.id}>
+                        <div className="transaction-icon-box">{renderIcon(trx.category)}</div>
+                        <div className="transaction-info">
+                          <p className="transaction-title">{trx.title}</p>
+                          <p className="transaction-type">{trx.type}</p>
+                        </div>
+                        <div className="transaction-amount-data">
+                          <p className={trx.amount > 0 ? "amount-positive" : "amount-negative"}>
+                            {trx.amount > 0 ? "+" : ""}Rp{Math.abs(trx.amount).toLocaleString("id-ID")}
+                          </p>
+                          <p className="transaction-date">{trx.date}</p>
+                        </div>
                       </div>
-                      <div className="transaction-amount-data">
-                        <p className={trx.amount > 0 ? "amount-positive" : "amount-negative"}>
-                          {trx.amount > 0 ? "+" : ""}Rp{Math.abs(trx.amount).toLocaleString("id-ID")}
-                        </p>
-                        <p className="transaction-date">{trx.date}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
